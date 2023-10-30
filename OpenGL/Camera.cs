@@ -14,16 +14,14 @@ namespace OpenGL
     {
         //----------------------------------------------------------------
         // To do:
-        // Add the abiliti to change target point (move the camera sphere)
+        // Add the ability to change target point (move the camera sphere)
         //----------------------------------------------------------------
 
 
         private const float DEPTHNEAR = 0.01f; // Distance to the near plane of the camera 
         private const float FOV = MathHelper.PiOver2; // Field of view
-        private const float MINSENSITIVITY = 0.001f; // Minimum mouse sensitivity
 
 
-        private float _sensitivity; // Mouse sensitivity
         private float _renderDistance; // Distance to the far plane of the camera
         private float _minRadius; // Minimum radius of a sphere
         private float _maxRadius; // Maximum radius of a sphere
@@ -32,14 +30,6 @@ namespace OpenGL
         private float _phi; // Azimuthal angle (radians)
 
 
-        public float Sensitivity
-        {
-            get { return _sensitivity; }
-            set
-            {
-                _sensitivity = Math.Clamp(value, MINSENSITIVITY, R);
-            }
-        }
         public float RenderDistance
         {
             get { return _renderDistance; }
@@ -112,16 +102,12 @@ namespace OpenGL
             RenderDistance = renderDistance;
             Target = target;
 
-            R = MathF.Sqrt(position.X * position.X + position.Y * position.Y + position.Z * position.Z);
+            _r = MathF.Sqrt(Position.X * Position.X + Position.Y * Position.Y + Position.Z * Position.Z);
+            _theta = MathF.Acos(Position.Z / R);
+            _phi = MathF.Atan2(Position.Z, Position.X);
 
-            Sensitivity = sensitivity;
-
-            // Thus it would take 10 steps to reach max/min radius
-            MaxRadius = R + 10 * Sensitivity; 
-            MinRadius = R - 10 * Sensitivity;
-
-            Theta = MathF.Acos(position.Z / R);
-            Phi = MathF.Atan2(position.Z, position.X);
+            MinRadius = R / 10;
+            MaxRadius = 10 * R;
 
             Direction = Vector3.Normalize(Position - Target);
             Right = Vector3.Normalize(Vector3.Cross(Vector3.UnitY, Direction));

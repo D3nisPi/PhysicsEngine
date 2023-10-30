@@ -60,7 +60,8 @@ namespace Models
         }
         public static bool operator ==(RotationAngles op1, RotationAngles op2)
         {
-            return op1.X == op2.X && op1.Y == op2.Y && op1.Z == op2.Z;
+            const float epsilon = 1e-4f;
+            return (MathF.Abs(op1.X - op2.X) < epsilon) && (MathF.Abs(op1.Y - op2.Y) < epsilon) && (MathF.Abs(op1.Z - op2.Z) < epsilon);
         }
         public static bool operator !=(RotationAngles op1, RotationAngles op2)
         {
@@ -123,7 +124,7 @@ namespace Models
 
 
 
-        public Model3D(float[] vertices, float[] colors, uint[] indices)
+        public Model3D(float[] vertices, uint[] indices)
         {
             Position = new Vector3();
             Size = new Size();
@@ -275,6 +276,63 @@ namespace Models
             RotateZ(angleRadZ);
         }
 
+        public static Model3D ParseOBJ(string filePath)
+        {
+            return ParseOBJ(filePath, new Vector4(1, 1, 1, 1));
+        }
+        public static Model3D ParseOBJ(string filePath, Vector4 defaultColor)
+        {
+            //-----------------------
+            // To do:
+            // 1) Parse textures
+            // 2) Parse normals
+            //-----------------------
+
+            List<float> vertices = new List<float>();
+            List<uint> indices = new List<uint>();
+            StreamReader? reader = null;
+            try
+            {
+                reader = new StreamReader(filePath);
+                string? line = reader.ReadLine();
+                while (line != null)
+                {
+                    line = line.Replace('.', ',');
+                    if (line.StartsWith("v "))
+                    {
+                        string[] tokens = line.Split(' ');
+
+                        vertices.Add(float.Parse(tokens[1]));
+                        vertices.Add(float.Parse(tokens[2]));
+                        vertices.Add(float.Parse(tokens[3]));
+
+                        vertices.Add(defaultColor.X);
+                        vertices.Add(defaultColor.Y);
+                        vertices.Add(defaultColor.Z);
+                        vertices.Add(defaultColor.W);
+                    }
+                    else if (line.StartsWith("f "))
+                    {
+                        string[] tokens = line.Split(' ');
+                        for (int i = 1; i < tokens.Length; i++)
+                        {
+                            string[] parts = tokens[i].Split('/');
+                            indices.Add(Convert.ToUInt32(parts[0]) - 1);
+                        }
+                    }
+                    line = reader.ReadLine();
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"An error occurred during parsing\nError: {e.Message}");
+            }
+            finally
+            {
+                reader?.Close();
+            }
+            return new Model3D(vertices.ToArray(), indices.ToArray());
+        }
     }
 
     

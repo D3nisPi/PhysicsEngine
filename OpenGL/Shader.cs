@@ -58,15 +58,15 @@ namespace OpenGL
 
             return shaderID;
         }
-        public void Activate_program()
+        public void ActivateProgram()
         {
             GL.UseProgram(_program);
         }
-        public void Deactivate_program()
+        public void DeactivateProgram()
         {
             GL.UseProgram(0);
         }
-        public void Delete_program()
+        public void DeleteProgram()
         {
             GL.DeleteProgram(_program);
         }

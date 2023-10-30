@@ -10,4 +10,10 @@
     <PackageReference Include="OpenTK" Version="4.8.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="data\cube.obj">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
