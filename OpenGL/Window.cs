@@ -3,6 +3,8 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Windowing.Desktop;
+using Models;
+
 namespace OpenGL
 {
     public class Window : GameWindow
