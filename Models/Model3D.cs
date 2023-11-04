@@ -2,45 +2,45 @@
 using OpenTK.Mathematics;
 namespace Models
 {
-    
+
     public struct RotationAngles // angles (rad) of rotation around axes between current and initial position of object 
     {
-        private float _rotationX; // around X-axis
-        private float _rotationY; // around Y-axis
-        private float _rotationZ; // around Z-axis
-        public float X 
+        public float X { get; set; } // Around X-axis
+        public float Y { get; set; } // Around Y-axis
+        public float Z { get; set; } // Around Z-axis
+
+        public float NormalizedX // [0 ; TwoPi]
         {
-            get { return _rotationX; }
-            set
+            get
             {
-                value %= MathHelper.TwoPi;
+                float value = X % MathHelper.TwoPi;
                 if (value < 0)
                     value = MathHelper.TwoPi + value;
-                _rotationX = value;
+                return value;
             }
         }
-        public float Y 
+        public float NormalizedY // [0 ; TwoPi]
         {
-            get { return _rotationY; }
-            set
+            get
             {
-                value %= MathHelper.TwoPi;
+                float value = Y % MathHelper.TwoPi;
                 if (value < 0)
                     value = MathHelper.TwoPi + value;
-                _rotationY = value;
+                return value;
             }
         }
-        public float Z 
+        public float NormalizedZ // [0 ; TwoPi]
         {
-            get { return _rotationZ; }
-            set
+            get
             {
-                value %= MathHelper.TwoPi;
+                float value = Z % MathHelper.TwoPi;
                 if (value < 0)
                     value = MathHelper.TwoPi + value;
-                _rotationZ = value;
+                return value;
             }
         }
+
+
         public static RotationAngles Zero;
         static RotationAngles()
         {
@@ -113,9 +113,12 @@ namespace Models
         private int _vbo;
         private int _ebo;
 
-        public Vector3 Position { get; private set; }
-        public Size Size { get; private set; }
-        public RotationAngles Rotation { get; private set; }
+        private Vector3 _position;
+        private Size _size;
+        private RotationAngles _rotation;
+        public Vector3 Position { get => _position; }
+        public Size Size { get => _size;  }
+        public RotationAngles Rotation { get => _rotation;  }
 
 
         public Vector3 MovementPerSecond;
@@ -126,9 +129,9 @@ namespace Models
 
         public Model3D(float[] vertices, uint[] indices)
         {
-            Position = new Vector3();
-            Size = new Size();
-            Rotation = new RotationAngles();
+            _position = new Vector3();
+            _size = new Size();
+            _rotation = new RotationAngles();
 
             MovementPerSecond = Vector3.Zero;
             ScalingPerSecond = Size.One;
@@ -201,7 +204,9 @@ namespace Models
 
             SetDataVBO();
 
-            Size = new Size(Size.X * scaleX, Size.Y * scaleY, Size.Z * scaleZ);
+            _size.X *= scaleX;
+            _size.Y *= scaleY;
+            _size.Z *= scaleZ;
         }
 
         public void Move(float shiftX, float shiftY, float shiftZ)
@@ -215,7 +220,9 @@ namespace Models
 
             SetDataVBO();
 
-            Position = new Vector3(Position.X + shiftX, Position.Y + shiftY, Position.Z + shiftZ);
+            _position.X += shiftX;
+            _position.Y += shiftY;
+            _position.Z += shiftZ;
         }
 
         public void RotateX(float angleRad)
@@ -233,7 +240,8 @@ namespace Models
 
             SetDataVBO();
 
-            Rotation = new RotationAngles(Rotation.X + angleRad, Rotation.Y, Rotation.Z);
+            _rotation.X += angleRad;
+            _rotation.X = _rotation.NormalizedX;
         }
         public void RotateY(float angleRad)
         {
@@ -250,7 +258,8 @@ namespace Models
 
             SetDataVBO();
 
-            Rotation = new RotationAngles(Rotation.X, Rotation.Y + angleRad, Rotation.Z);
+            _rotation.Y += angleRad;
+            _rotation.Y = _rotation.NormalizedY;
         }
         public void RotateZ(float angleRad)
         {
@@ -267,7 +276,8 @@ namespace Models
 
             SetDataVBO();
 
-            Rotation = new RotationAngles(Rotation.X, Rotation.Y, Rotation.Z + angleRad);
+            _rotation.Z += angleRad;
+            _rotation.Z = _rotation.NormalizedZ;
         }
         public void Rotate(float angleRadX, float angleRadY, float angleRadZ)
         {
