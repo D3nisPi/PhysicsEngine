@@ -1,9 +1,14 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using GLObjects;
+
 namespace Models
 {
 
-    public struct RotationAngles // angles (rad) of rotation around axes between current and initial position of object 
+    /// <summary>
+    /// Angles (rad) of rotation around axes between current and initial position of object
+    /// </summary>
+    public struct RotationAngles  
     {
         public float X { get; set; } // Around X-axis
         public float Y { get; set; } // Around Y-axis
@@ -103,15 +108,22 @@ namespace Models
 
     public class Model3D
     {
+        private const int VERTEXLOCATION = 0; // Location of position vector in shader
+        private const int COLORLOCATION = 1; // Location of color vector in shader
+        private const int VERTEXCOUNT = 3; // Amount of floats to describe a vertex (xyz)
+        private const int COLORCOUNT = 4; // Amount of floats to describe a color (rgba)
+
         private float[] _vertices;
+        private float[] _colors;
         private uint[] _indices;
 
         //private Texture _texture;
         //private Material _material // for light fx
 
-        private int _vao;
-        private int _vbo;
-        private int _ebo;
+        private VertexArrayObject _vao;
+        private VertexBufferObject _vboVertices;
+        private VertexBufferObject _vboColors;
+        private ElementBufferObject _ebo;
 
         private Vector3 _position;
         private Size _size;
@@ -120,14 +132,11 @@ namespace Models
         public Size Size { get => _size;  }
         public RotationAngles Rotation { get => _rotation;  }
 
-
         public Vector3 MovementPerSecond;
         public Size ScalingPerSecond;
         public RotationAngles RotationPerSecond;
 
-
-
-        public Model3D(float[] vertices, uint[] indices)
+        public Model3D(float[] vertices, float[] colors, uint[] indices)
         {
             _position = new Vector3();
             _size = new Size();
@@ -138,50 +147,50 @@ namespace Models
             RotationPerSecond = RotationAngles.Zero;
 
             _vertices = (float[])vertices.Clone();
+            _colors = (float[])colors.Clone();
             _indices = (uint[])indices.Clone();
 
-            // Bind VBO
-            _vbo = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, _vbo);
-            GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * sizeof(float), _vertices, BufferUsageHint.StaticDraw);
+            // Creating VBOs for vertices and colors
+          
+            _vboVertices = new VertexBufferObject(_vertices);
+            _vboColors = new VertexBufferObject(_colors);
 
-            // Bind VAO
-            _vao = GL.GenVertexArray();
-            GL.BindVertexArray(_vao);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, true, 7 * sizeof(float), 0);
-            GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, true, 7 * sizeof(float), 3 * sizeof(float));
-            GL.EnableVertexAttribArray(0);
-            GL.EnableVertexAttribArray(1);
+            // Creating VAO
 
-            // Bind EBO
-            _ebo = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, _ebo);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
+            _vao = new VertexArrayObject();
+            _vao.Activate();
 
-            //Unbind all
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-            GL.BindVertexArray(0);
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
+            _vboVertices.Activate(); // Bind the vbo that stores vertices
+            _vao.AttribPointer(VERTEXLOCATION, VERTEXCOUNT, VERTEXCOUNT, 0);
 
+            _vboColors.Activate(); // Bind the vbo that stores colors
+            _vao.AttribPointer(COLORLOCATION, COLORCOUNT, COLORCOUNT, 0);
+
+            // Creating EBO
+
+            _ebo = new ElementBufferObject(_indices);
+
+            // Unbind all
+
+            _vboVertices.Deactivate();
+            _vao.Deactivate();
+            _ebo.Deactivate();
         }
-
-        private void SetDataVBO()
+        public void SetColor(Vector4 color)
         {
-            GL.BindBuffer(BufferTarget.ArrayBuffer, _vbo);
-            GL.BufferData(BufferTarget.ArrayBuffer, _vertices.Length * sizeof(float), _vertices, BufferUsageHint.StaticDraw);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+            for (int i = 0; i < _colors.Length; i = i + COLORCOUNT)
+            {
+                _colors[i] = color.X;
+                _colors[i + 1] = color.Y;
+                _colors[i + 2] = color.Z;
+                _colors[i + 3] = color.W;
+            }
+
+            _vboColors.SetData(_colors);
         }
         public void Draw()
         {
-            GL.BindVertexArray(_vao);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, _vbo);
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, _ebo);
-
-            GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
-
-            GL.BindVertexArray(0);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
+            _vao.DrawElements(_indices, _vboVertices, _ebo); 
         }
         public void Update(float milliseconds)
         {
@@ -192,17 +201,16 @@ namespace Models
             if (RotationPerSecond != RotationAngles.Zero)
                 Rotate(RotationPerSecond.X * milliseconds, RotationPerSecond.Y * milliseconds, RotationPerSecond.Z * milliseconds);
         }
-
         public void Scale(float scaleX, float scaleY, float scaleZ)
         {
-            for (int i = 0; i < _vertices.Length; i = i + 7)
+            for (int i = 0; i < _vertices.Length; i = i + VERTEXCOUNT)
             {
                 _vertices[i] *=  (_vertices[i] - Position.X) * scaleX + Position.X;
                 _vertices[i + 1] *= (_vertices[i] - Position.Y) * scaleY + Position.Y;
                 _vertices[i + 2] *= (_vertices[i] - Position.Z) * scaleZ + Position.Z;
             }
 
-            SetDataVBO();
+            _vboVertices.SetData(_vertices);
 
             _size.X *= scaleX;
             _size.Y *= scaleY;
@@ -211,14 +219,14 @@ namespace Models
 
         public void Move(float shiftX, float shiftY, float shiftZ)
         {
-            for (int i = 0; i < _vertices.Length; i = i + 7)
+            for (int i = 0; i < _vertices.Length; i = i + VERTEXCOUNT)
             {
                 _vertices[i] += shiftX;
                 _vertices[i + 1] += shiftY;
                 _vertices[i + 2] += shiftZ;
             }
-
-            SetDataVBO();
+            
+            _vboVertices.SetData(_vertices);
 
             _position.X += shiftX;
             _position.Y += shiftY;
@@ -227,7 +235,7 @@ namespace Models
 
         public void RotateX(float angleRad)
         {
-            for (int i = 0; i < _vertices.Length; i = i + 7)
+            for (int i = 0; i < _vertices.Length; i = i + VERTEXCOUNT)
             {
                 float x = _vertices[i] - Position.X;
                 float y = _vertices[i + 1] - Position.Y;
@@ -237,15 +245,15 @@ namespace Models
                 _vertices[i + 1] = MathF.Cos(angleRad) * y - MathF.Sin(angleRad) * z + Position.Y;
                 _vertices[i + 2] = MathF.Sin(angleRad) * y + MathF.Cos(angleRad) * z + Position.Z;
             }
-
-            SetDataVBO();
+            
+            _vboVertices.SetData(_vertices);
 
             _rotation.X += angleRad;
             _rotation.X = _rotation.NormalizedX;
         }
         public void RotateY(float angleRad)
         {
-            for (int i = 0; i < _vertices.Length; i = i + 7)
+            for (int i = 0; i < _vertices.Length; i = i + VERTEXCOUNT)
             {
                 float x = _vertices[i] - Position.X;
                 float y = _vertices[i + 1] - Position.Y;
@@ -255,15 +263,15 @@ namespace Models
                 _vertices[i + 1] = y + Position.Y;
                 _vertices[i + 2] = -MathF.Sin(angleRad) * x + MathF.Cos(angleRad) * z + Position.Z;
             }
-
-            SetDataVBO();
+            
+            _vboVertices.SetData(_vertices);
 
             _rotation.Y += angleRad;
             _rotation.Y = _rotation.NormalizedY;
         }
         public void RotateZ(float angleRad)
         {
-            for (int i = 0; i < _vertices.Length; i = i + 7)
+            for (int i = 0; i < _vertices.Length; i = i + VERTEXCOUNT)
             {
                 float x = _vertices[i] - Position.X;
                 float y = _vertices[i + 1] - Position.Y;
@@ -273,8 +281,8 @@ namespace Models
                 _vertices[i + 1] = MathF.Sin(angleRad) * x + MathF.Cos(angleRad) * y + Position.Y;
                 _vertices[i + 2] = z + Position.Z;
             }
-
-            SetDataVBO();
+            
+            _vboVertices.SetData(_vertices);
 
             _rotation.Z += angleRad;
             _rotation.Z = _rotation.NormalizedZ;
@@ -300,6 +308,7 @@ namespace Models
 
             List<float> vertices = new List<float>();
             List<uint> indices = new List<uint>();
+            List<float> colors = new List<float>();
             StreamReader? reader = null;
             try
             {
@@ -316,10 +325,10 @@ namespace Models
                         vertices.Add(float.Parse(tokens[2]));
                         vertices.Add(float.Parse(tokens[3]));
 
-                        vertices.Add(defaultColor.X);
-                        vertices.Add(defaultColor.Y);
-                        vertices.Add(defaultColor.Z);
-                        vertices.Add(defaultColor.W);
+                        colors.Add(defaultColor.X);
+                        colors.Add(defaultColor.Y);
+                        colors.Add(defaultColor.Z);
+                        colors.Add(defaultColor.W);
                     }
                     else if (line.StartsWith("f "))
                     {
@@ -341,7 +350,7 @@ namespace Models
             {
                 reader?.Close();
             }
-            return new Model3D(vertices.ToArray(), indices.ToArray());
+            return new Model3D(vertices.ToArray(), colors.ToArray(), indices.ToArray());
         }
     }
 

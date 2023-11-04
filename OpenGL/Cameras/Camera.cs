@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenGL
+namespace OpenGL.Cameras
 {
     /// <summary>
     /// A camera that is located on the surface of a hemisphere and looks at a specified target point
@@ -97,7 +97,7 @@ namespace OpenGL
         public Camera(Vector3 position, Vector3 target, float aspectRatio, float renderDistance, float sensitivity)
         {
             // Abs(y) because camera lies on a semisphere, Y >= 0 and 0 <= Theta <= 90 degree
-            Position = new Vector3(position.X, MathF.Abs(position.Y), position.Z); 
+            Position = new Vector3(position.X, MathF.Abs(position.Y), position.Z);
             AspectRatio = aspectRatio;
             RenderDistance = renderDistance;
             Target = target;
@@ -114,7 +114,7 @@ namespace OpenGL
             Up = Vector3.Normalize(Vector3.Cross(Direction, Right));
         }
 
-        
+
 
         // Get the view matrix
         public Matrix4 GetViewMatrix()

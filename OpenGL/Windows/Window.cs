@@ -4,8 +4,10 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Windowing.Desktop;
 using Models;
+using OpenGL.Cameras;
+using OpenGL.Shaders;
 
-namespace OpenGL
+namespace OpenGL.Windows
 {
     public class Window : GameWindow
     {
@@ -24,20 +26,19 @@ namespace OpenGL
 
         protected override void OnLoad()
         {
-            GL.Enable(EnableCap.DepthTest);
             GL.ClearColor(0f, 0f, 0f, 0f);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
 
-            string vertPath = $@"{Directory.GetCurrentDirectory()}\shader.vert";
-            string fragPath = $@"{Directory.GetCurrentDirectory()}\shader.frag";
+            string vertPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\shader.vert";
+            string fragPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\shader.frag";
             shader = new Shader(vertPath, fragPath);
 
             camera = new Camera(new Vector3(5, 5, 5), Vector3.Zero, Size.X / (float)Size.Y, 100, 0.3f);
 
 
-            string cubePath = @$"{Directory.GetCurrentDirectory()}\data\cube.obj";
-            Model3D cube = Model3D.ParseOBJ(cubePath);
-            cube.RotationPerSecond = new RotationAngles(MathHelper.PiOver2, MathHelper.Pi, MathHelper.TwoPi);
+            string cubePath = @$"{Directory.GetCurrentDirectory()}\Data\cube.obj";
+            Model3D cube = Model3D.ParseOBJ(cubePath, new Vector4(0, 1, 0, 1));
+            cube.RotationPerSecond = new RotationAngles(MathHelper.PiOver3, MathHelper.PiOver2, MathHelper.Pi);
             _models.Add(cube);
 
             base.OnLoad();
@@ -48,7 +49,7 @@ namespace OpenGL
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             shader.ActivateProgram();
 
-            foreach(var model in _models)
+            foreach (var model in _models)
             {
                 model.Update((float)args.Time);
                 model.Draw();

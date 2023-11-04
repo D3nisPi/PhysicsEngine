@@ -2,7 +2,7 @@
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using System.Xml.Linq;
-using OpenGL;
+using OpenGL.Windows;
 
 namespace Program
 {
