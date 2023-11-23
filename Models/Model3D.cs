@@ -205,9 +205,9 @@ namespace Models
         {
             for (int i = 0; i < _vertices.Length; i = i + VERTEXCOUNT)
             {
-                _vertices[i] *=  (_vertices[i] - Position.X) * scaleX + Position.X;
-                _vertices[i + 1] *= (_vertices[i] - Position.Y) * scaleY + Position.Y;
-                _vertices[i + 2] *= (_vertices[i] - Position.Z) * scaleZ + Position.Z;
+                _vertices[i] =  (_vertices[i] - Position.X) * scaleX + Position.X;
+                _vertices[i + 1] = (_vertices[i + 1] - Position.Y) * scaleY + Position.Y;
+                _vertices[i + 2] = (_vertices[i + 2] - Position.Z) * scaleZ + Position.Z;
             }
 
             _vboVertices.SetData(_vertices);
