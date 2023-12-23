@@ -1,9 +1,8 @@
-﻿using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
-using GLObjects;
-using OpenGL;
+﻿using OpenTK.Mathematics;
+using OpenGL.Textures;
+using OpenGL.Objects;
 
-namespace Models
+namespace OpenGL.Models
 {
     public class Model3D
     {

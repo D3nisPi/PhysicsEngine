@@ -11,10 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\GLObjects\GLObjects.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="Data\cube.obj">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

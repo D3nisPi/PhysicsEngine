@@ -1,11 +1,10 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
-using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Windowing.Desktop;
-using Models;
 using OpenGL.Cameras;
 using OpenGL.Shaders;
+using OpenGL.Models;
 
 namespace OpenGL.Windows
 {
@@ -36,7 +35,7 @@ namespace OpenGL.Windows
             camera = new Camera(new Vector3(5, 5, 5), Vector3.Zero, Size.X / (float)Size.Y, 100, 0.3f);
 
 
-            string cubePath = @$"{Directory.GetCurrentDirectory()}\Data\cube.obj";
+            string cubePath = @$"{Directory.GetCurrentDirectory()}\Models\Data\cube.obj";
             Model3D cube = Model3D.ParseOBJ(cubePath, new Vector4(0, 1, 0, 1));
             cube.RotationPerSecond = new RotationAngles(MathHelper.PiOver3, MathHelper.PiOver2, MathHelper.Pi);
             _models.Add(cube);
