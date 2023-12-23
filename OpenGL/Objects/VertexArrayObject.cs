@@ -25,23 +25,25 @@ namespace OpenGL.Objects
         {
             GL.BindVertexArray(0);
         }
+        public static void DeactivateObjects()
+        {
+            GL.BindVertexArray(0);
+        }
         public void AttribPointer(int index, int size, int stride, int offset)
         {
             GL.VertexAttribPointer(index, size, VertexAttribPointerType.Float, true, stride * sizeof(float), offset * sizeof(float));
             GL.EnableVertexAttribArray(index);
         }
-        public void DrawElements(uint[] indices, VertexBufferObject vbo, ElementBufferObject ebo)
+        public void DrawElements(ElementBufferObject ebo)
         {
             // Binding objects
             Activate();
-            vbo.Activate();
-            ebo.Activate();       
+            ebo.Activate();      
             // Drawing
-            GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
+            GL.DrawElements(PrimitiveType.Triangles, ebo.Indices.Length, DrawElementsType.UnsignedInt, 0);
             // Unbinding objects
             Deactivate();
             ebo.Deactivate();
-            vbo.Deactivate();
         }
     }
 }

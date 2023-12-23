@@ -12,12 +12,14 @@ namespace OpenGL.Objects
     /// </summary>
     public class ElementBufferObject
     {
+        public uint[] Indices;
         public int Id { get; private set; }
 
         public ElementBufferObject(uint[] indices)
         {
             Id = GL.GenBuffer();
-            SetData(indices);
+            Indices = (uint[])indices.Clone();
+            UpdateData();
         }
         public void Activate()
         {
@@ -27,10 +29,14 @@ namespace OpenGL.Objects
         {
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
         }
-        public void SetData(uint[] indices)
+        public static void DeactivateObjects()
+        {
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
+        }
+        public void UpdateData()
         {
             Activate();
-            GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.DynamicDraw);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, Indices.Length * sizeof(uint), Indices, BufferUsageHint.DynamicDraw);
             Deactivate();
         }
     }

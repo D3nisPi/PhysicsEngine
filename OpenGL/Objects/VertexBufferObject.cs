@@ -13,12 +13,14 @@ namespace OpenGL.Objects
     /// </summary>
     public class VertexBufferObject
     {
+        public float[] Vertices;
         public int Id { get; private set; }
 
         public VertexBufferObject(float[] vertices)
         {
             Id = GL.GenBuffer();
-            SetData(vertices);
+            Vertices = (float[])vertices.Clone();
+            UpdateData();
         }
         public void Activate()
         {
@@ -28,10 +30,14 @@ namespace OpenGL.Objects
         {
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
         }
-        public void SetData(float[] vertices)
+        public static void DeactivateObjects()
+        {
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+        }
+        public void UpdateData()
         {
             Activate();
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, Vertices.Length * sizeof(float), Vertices, BufferUsageHint.StaticDraw);
             Deactivate();
         }
     }
