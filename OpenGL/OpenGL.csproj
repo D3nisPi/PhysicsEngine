@@ -24,10 +24,16 @@
     <None Update="Models\Data\sphere.obj">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Shaders\Data\shader.frag">
+    <None Update="Shaders\Data\colorShader.frag">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Shaders\Data\shader.vert">
+    <None Update="Shaders\Data\colorShader.vert">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Shaders\Data\texShader.frag">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Shaders\Data\texShader.vert">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

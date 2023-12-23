@@ -2,6 +2,7 @@
 using OpenGL.Textures;
 using OpenGL.Objects;
 using OpenGL.Shaders;
+using System.Drawing;
 
 namespace OpenGL.Models
 {
@@ -18,6 +19,8 @@ namespace OpenGL.Models
         private const int VERTEXCOUNT = 3; // Amount of floats to describe a vertex (xyz)
         private const int COLORCOUNT = 4; // Amount of floats to describe a color (rgba)
         private const int TEXTURECOUNT = 2; // Amount of floats to describe a texture coordinate (xy)
+
+        public static readonly Vector4 DEFAULTCOLOR;
 
         private DrawType _drawType;
         public DrawType DrawType
@@ -56,6 +59,10 @@ namespace OpenGL.Models
         public Size ScalingPerSecond;
         public RotationAngles RotationPerSecond;
 
+        static Model3D()
+        {
+            DEFAULTCOLOR = new Vector4(1, 1, 1, 1);
+        }
         //Constructor for model without texture
         public Model3D(float[] vertices, uint[] indices, float[] colors, Shader colorShader)
         {
@@ -69,7 +76,7 @@ namespace OpenGL.Models
 
             _colorShader = colorShader;
 
-            DrawType = DrawType.Color;
+            _drawType = DrawType.Color;
 
             // Creating VBOs for vertices and colors
           
@@ -112,7 +119,7 @@ namespace OpenGL.Models
 
             _texture = texture;
 
-            DrawType = DrawType.Texture;
+            _drawType = DrawType.Texture;
 
             // Creating VBOs for vertices, colors and texture coordinates
 
@@ -279,11 +286,11 @@ namespace OpenGL.Models
             RotateZ(angleRadZ);
         }
 
-        public static Model3D ParseOBJ(string filePath)
+        public static Model3D ParseOBJ(string objPath, Shader colorShader)
         {
-            return ParseOBJ(filePath, new Vector4(1, 1, 1, 1));
+            return ParseOBJ(objPath, colorShader, DEFAULTCOLOR);
         }
-        public static Model3D ParseOBJ(string filePath, Vector4 defaultColor)
+        public static Model3D ParseOBJ(string objPath, Shader colorShader, Vector4 color)
         {
             //-----------------------
             // To do:
@@ -293,11 +300,11 @@ namespace OpenGL.Models
 
             List<float> vertices = new List<float>();
             List<uint> indices = new List<uint>();
-            List<float> colors = new List<float>();
+            
             StreamReader? reader = null;
             try
             {
-                reader = new StreamReader(filePath);
+                reader = new StreamReader(objPath);
                 string? line = reader.ReadLine();
                 while (line != null)
                 {
@@ -309,11 +316,6 @@ namespace OpenGL.Models
                         vertices.Add(float.Parse(tokens[1]));
                         vertices.Add(float.Parse(tokens[2]));
                         vertices.Add(float.Parse(tokens[3]));
-
-                        colors.Add(defaultColor.X);
-                        colors.Add(defaultColor.Y);
-                        colors.Add(defaultColor.Z);
-                        colors.Add(defaultColor.W);
                     }
                     else if (line.StartsWith("f "))
                     {
@@ -335,7 +337,80 @@ namespace OpenGL.Models
             {
                 reader?.Close();
             }
-            return new Model3D(vertices.ToArray(), colors.ToArray(), indices.ToArray());
+
+            List<float> colors = new List<float>(vertices.Count / 3 * 4);
+            for (int i = 0; i < vertices.Count / 3; i++)
+            {
+                colors.Add(color.X);
+                colors.Add(color.Y);
+                colors.Add(color.Z);
+                colors.Add(color.W);
+            }
+
+            return new Model3D(vertices.ToArray(), indices.ToArray(), colors.ToArray(), colorShader);
+        }
+        public static Model3D ParseOBJ(string objPath, string texPath, Shader colorShader, Shader textureShader)
+        {
+            return ParseOBJ(objPath, texPath, colorShader, textureShader, DEFAULTCOLOR);
+        }
+        public static Model3D ParseOBJ(string objPath, string texPath, Shader colorShader, Shader textureShader, Vector4 color)
+        {
+            List<float> vertices = new List<float>();
+            List<uint> indices = new List<uint>();
+            List<float> texCoords = new List<float>();
+
+            StreamReader? reader = null;
+            try
+            {
+                reader = new StreamReader(objPath);
+                string? line = reader.ReadLine();
+                while (line != null)
+                {
+                    line = line.Replace('.', ',');
+                    if (line.StartsWith("v "))
+                    {
+                        string[] tokens = line.Split(' ');
+
+                        vertices.Add(float.Parse(tokens[1]));
+                        vertices.Add(float.Parse(tokens[2]));
+                        vertices.Add(float.Parse(tokens[3]));
+                    }
+                    else if (line.StartsWith("vt "))
+                    {
+                        string[] tokens = line.Split(' ');
+                        texCoords.Add(float.Parse(tokens[1]));
+                        texCoords.Add(float.Parse(tokens[2]));
+                    }
+                    else if (line.StartsWith("f "))
+                    {
+                        string[] tokens = line.Split(' ');
+                        for (int i = 1; i < tokens.Length; i++)
+                        {
+                            string[] parts = tokens[i].Split('/');
+                            indices.Add(Convert.ToUInt32(parts[0]) - 1);
+                        }
+                    }
+                    line = reader.ReadLine();
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"An error occurred during parsing\nError: {e.Message}");
+            }
+            finally
+            {
+                reader?.Close();
+            }
+            List<float> colors = new List<float>(vertices.Count / 3 * 4);
+            for (int i = 0; i < vertices.Count / 3; i++)
+            {
+                colors.Add(color.X);
+                colors.Add(color.Y);
+                colors.Add(color.Z);
+                colors.Add(color.W);
+            }
+            Texture texture = Texture.LoadFromFile(texPath);
+            return new Model3D(vertices.ToArray(), indices.ToArray(), colors.ToArray(), texCoords.ToArray(), colorShader, textureShader, texture);
         }
     }
 

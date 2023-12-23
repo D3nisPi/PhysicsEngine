@@ -14,7 +14,8 @@ namespace OpenGL.Windows
 
         private float _zoomSensitivity = 1;
 
-        Shader shader;
+        Shader colorShader;
+        Shader texShader;
         Camera camera;
 
         public Window(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings)
@@ -26,17 +27,22 @@ namespace OpenGL.Windows
         protected override void OnLoad()
         {
             GL.ClearColor(1f, 1f, 1f, 1f);
-            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
-
-            string vertPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\shader.vert";
-            string fragPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\shader.frag";
-            shader = new Shader(vertPath, fragPath);
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
 
             camera = new Camera(new Vector3(5, 5, 5), Vector3.Zero, Size.X / (float)Size.Y, 100, 0.3f);
 
 
+            string vertPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\colorShader.vert";
+            string fragPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\colorShader.frag";
+            colorShader = new Shader(vertPath, fragPath);
+
+            vertPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\texShader.vert";
+            fragPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\texShader.frag";
+            texShader = new Shader(vertPath, fragPath);
+
+            string imgPath = @"C:\Users\d3nis\OneDrive\Рабочий стол\container.jpg";
             string cubePath = @$"{Directory.GetCurrentDirectory()}\Models\Data\cube.obj";
-            Model3D cube = Model3D.ParseOBJ(cubePath, new Vector4(0, 1, 0, 1));
+            Model3D cube = Model3D.ParseOBJ(cubePath, imgPath, colorShader, texShader, new Vector4(0, 1, 0, 1));
             cube.RotationPerSecond = new RotationAngles(MathHelper.PiOver3, MathHelper.PiOver2, MathHelper.Pi);
             _models.Add(cube);
 
@@ -46,7 +52,7 @@ namespace OpenGL.Windows
         {
             base.OnRenderFrame(args);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            shader.ActivateProgram();
+            //shader.ActivateProgram();
 
             foreach (var model in _models)
             {
@@ -59,9 +65,13 @@ namespace OpenGL.Windows
             Matrix4 viewMatrix = camera.GetViewMatrix();
             Matrix4 projectionMatrix = camera.GetProjectionMatrix();
 
-            shader.SetMatrixUniform("model", ref modelMatrix);
-            shader.SetMatrixUniform("view", ref viewMatrix);
-            shader.SetMatrixUniform("projection", ref projectionMatrix);
+            colorShader.SetMatrixUniform("model", ref modelMatrix);
+            colorShader.SetMatrixUniform("view", ref viewMatrix);
+            colorShader.SetMatrixUniform("projection", ref projectionMatrix);
+
+            texShader.SetMatrixUniform("model", ref modelMatrix);
+            texShader.SetMatrixUniform("view", ref viewMatrix);
+            texShader.SetMatrixUniform("projection", ref projectionMatrix);
 
             SwapBuffers();
         }
