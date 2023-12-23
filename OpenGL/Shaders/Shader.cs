@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using OpenTK.Graphics.OpenGL4;
@@ -77,8 +78,15 @@ namespace OpenGL.Shaders
         }
         public void SetMatrixUniform(string name, ref Matrix4 data)
         {
+            GL.UseProgram(_program);
             int location = GL.GetUniformLocation(_program, name);
             GL.UniformMatrix4(location, true, ref data);
+        }
+        public void SetIntUniform(string name, int data)
+        {
+            GL.UseProgram(_program);
+            int location = GL.GetUniformLocation(_program, name);
+            GL.Uniform1(location, data);
         }
     }
 }

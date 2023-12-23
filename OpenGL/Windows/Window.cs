@@ -26,7 +26,7 @@ namespace OpenGL.Windows
 
         protected override void OnLoad()
         {
-            GL.ClearColor(0f, 0f, 0f, 0f);
+            GL.ClearColor(1f, 1f, 1f, 1f);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
 
             string vertPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\shader.vert";
