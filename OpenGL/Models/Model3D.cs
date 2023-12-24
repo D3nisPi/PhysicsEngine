@@ -3,6 +3,7 @@ using OpenGL.Textures;
 using OpenGL.Objects;
 using OpenGL.Shaders;
 using System.Drawing;
+using OpenTK.Graphics.OpenGL;
 
 namespace OpenGL.Models
 {
@@ -146,7 +147,7 @@ namespace OpenGL.Models
             _vaoColor.AttribPointer(VERTEXLOCATION, VERTEXCOUNT, VERTEXCOUNT, 0);
 
             _vboTextures.Activate();
-            _vaoTexture.AttribPointer(TEXTURELOCATION, COLORCOUNT, TEXTURECOUNT, 0);
+            _vaoTexture.AttribPointer(TEXTURELOCATION, TEXTURECOUNT, TEXTURECOUNT, 0);
 
             // Creating EBO
 
@@ -179,11 +180,11 @@ namespace OpenGL.Models
                     _colorShader.ActivateProgram();
                     _vaoColor.DrawElements(_ebo);
                     break;
-                case DrawType.Texture:
+                case DrawType.Texture:              
                     _textureShader!.ActivateProgram();
+                    _texture!.Activate();
                     _vaoTexture!.DrawElements(_ebo);
                     break;
-
             }
         }
         public void Update(float seconds)
@@ -357,7 +358,9 @@ namespace OpenGL.Models
         {
             List<float> vertices = new List<float>();
             List<uint> indices = new List<uint>();
-            List<float> texCoords = new List<float>();
+            List<float> allTexCoords = new List<float>();
+
+            float[]? texCoords = null;
 
             StreamReader? reader = null;
             try
@@ -378,16 +381,26 @@ namespace OpenGL.Models
                     else if (line.StartsWith("vt "))
                     {
                         string[] tokens = line.Split(' ');
-                        texCoords.Add(float.Parse(tokens[1]));
-                        texCoords.Add(float.Parse(tokens[2]));
+                        allTexCoords.Add(float.Parse(tokens[1]));
+                        allTexCoords.Add(float.Parse(tokens[2]));
                     }
                     else if (line.StartsWith("f "))
                     {
+                        if (texCoords == null)
+                        {
+                            texCoords = new float[vertices.Count / 3 * 2];
+                        }
                         string[] tokens = line.Split(' ');
                         for (int i = 1; i < tokens.Length; i++)
                         {
                             string[] parts = tokens[i].Split('/');
-                            indices.Add(Convert.ToUInt32(parts[0]) - 1);
+
+                            uint index = uint.Parse(parts[0]) - 1;
+                            indices.Add(index);
+
+                            int texIndex = int.Parse(parts[1]) - 1;
+                            texCoords[index * 2] = allTexCoords[texIndex * 2];
+                            texCoords[index * 2 + 1] = allTexCoords[texIndex * 2 + 1];
                         }
                     }
                     line = reader.ReadLine();
@@ -410,7 +423,7 @@ namespace OpenGL.Models
                 colors.Add(color.W);
             }
             Texture texture = Texture.LoadFromFile(texPath);
-            return new Model3D(vertices.ToArray(), indices.ToArray(), colors.ToArray(), texCoords.ToArray(), colorShader, textureShader, texture);
+            return new Model3D(vertices.ToArray(), indices.ToArray(), colors.ToArray(), texCoords, colorShader, textureShader, texture);
         }
     }
 

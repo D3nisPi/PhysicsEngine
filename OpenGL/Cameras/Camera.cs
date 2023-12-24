@@ -65,8 +65,7 @@ namespace OpenGL.Cameras
         }
         public float Theta
         {
-            get
-            { return _theta; }
+            get { return _theta; }
             set
             {
                 _theta = MathHelper.Clamp(value, 0, MathHelper.PiOver2);
@@ -103,7 +102,7 @@ namespace OpenGL.Cameras
             Target = target;
 
             _r = MathF.Sqrt(Position.X * Position.X + Position.Y * Position.Y + Position.Z * Position.Z);
-            _theta = MathF.Acos(Position.Z / R);
+            _theta = MathF.Acos(Position.Y / R);
             _phi = MathF.Atan2(Position.Z, Position.X);
 
             MinRadius = R / 10;

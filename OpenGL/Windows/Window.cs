@@ -12,11 +12,15 @@ namespace OpenGL.Windows
     {
         private List<Model3D> _models = new List<Model3D>();
 
-        private float _zoomSensitivity = 1;
+        private float _zoomSensitivity = 1f;
+        private float _mouseSensitivity = 0.015f;
 
         Shader colorShader;
         Shader texShader;
         Camera camera;
+
+        private bool firstMove = true; // Flag for first frame
+        private Vector2 lastPosition;
 
         public Window(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings)
             : base(gameWindowSettings, nativeWindowSettings)
@@ -27,9 +31,10 @@ namespace OpenGL.Windows
         protected override void OnLoad()
         {
             GL.ClearColor(1f, 1f, 1f, 1f);
-            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            GL.PolygonMode(MaterialFace.Front, PolygonMode.Fill);
+            GL.PolygonMode(MaterialFace.Back, PolygonMode.Line);
 
-            camera = new Camera(new Vector3(5, 5, 5), Vector3.Zero, Size.X / (float)Size.Y, 100, 0.3f);
+            camera = new Camera(new Vector3(5, 3, 5), Vector3.Zero, Size.X / (float)Size.Y, 100, 0.3f);
 
 
             string vertPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\colorShader.vert";
@@ -40,8 +45,9 @@ namespace OpenGL.Windows
             fragPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\texShader.frag";
             texShader = new Shader(vertPath, fragPath);
 
-            string imgPath = @"C:\Users\d3nis\OneDrive\Рабочий стол\container.jpg";
+            string imgPath = @"C:\Users\d3nis\OneDrive\Рабочий стол\wood_texture3850.jpg";
             string cubePath = @$"{Directory.GetCurrentDirectory()}\Models\Data\cube.obj";
+            cubePath = @"C:\Users\d3nis\OneDrive\Рабочий стол\1.obj";
             Model3D cube = Model3D.ParseOBJ(cubePath, imgPath, colorShader, texShader, new Vector4(0, 1, 0, 1));
             cube.RotationPerSecond = new RotationAngles(MathHelper.PiOver3, MathHelper.PiOver2, MathHelper.Pi);
             _models.Add(cube);
@@ -52,11 +58,10 @@ namespace OpenGL.Windows
         {
             base.OnRenderFrame(args);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            //shader.ActivateProgram();
 
             foreach (var model in _models)
             {
-                model.Update((float)args.Time);
+                //model.Update((float)args.Time);
                 model.Draw();
             }
 
@@ -78,6 +83,24 @@ namespace OpenGL.Windows
         protected override void OnUpdateFrame(FrameEventArgs args)
         {
             base.OnUpdateFrame(args);
+
+
+            var mouse = MouseState;
+
+            if (firstMove)
+            {
+                lastPosition = new Vector2(mouse.X, mouse.Y);
+                firstMove = false;
+            }
+            else
+            {
+                var deltaX = mouse.X - lastPosition.X;
+                var deltaY = mouse.Y - lastPosition.Y;
+                lastPosition = new Vector2(mouse.X, mouse.Y);
+
+                camera.Phi += deltaX * _mouseSensitivity;
+                camera.Theta -= deltaY * _mouseSensitivity;
+            }
         }
         protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
