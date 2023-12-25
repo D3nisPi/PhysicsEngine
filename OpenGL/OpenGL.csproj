@@ -24,6 +24,9 @@
     <None Update="Models\Data\sphere.obj">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Models\Data\wood.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Shaders\Data\colorShader.frag">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

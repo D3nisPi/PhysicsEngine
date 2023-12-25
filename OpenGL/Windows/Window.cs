@@ -31,10 +31,12 @@ namespace OpenGL.Windows
         protected override void OnLoad()
         {
             GL.ClearColor(1f, 1f, 1f, 1f);
+            GL.Enable(EnableCap.DepthTest);
             GL.PolygonMode(MaterialFace.Front, PolygonMode.Fill);
             GL.PolygonMode(MaterialFace.Back, PolygonMode.Line);
+            //CursorState = CursorState.Grabbed;
 
-            camera = new Camera(new Vector3(5, 3, 5), Vector3.Zero, Size.X / (float)Size.Y, 100, 0.3f);
+            camera = new Camera(new Vector3(5, 5, 5), Vector3.Zero, Size.X / (float)Size.Y, 100, 0.3f);
 
 
             string vertPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\colorShader.vert";
@@ -45,9 +47,8 @@ namespace OpenGL.Windows
             fragPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\texShader.frag";
             texShader = new Shader(vertPath, fragPath);
 
-            string imgPath = @"C:\Users\d3nis\OneDrive\Рабочий стол\wood_texture3850.jpg";
+            string imgPath = @$"{Directory.GetCurrentDirectory()}\Models\Data\wood.jpg";
             string cubePath = @$"{Directory.GetCurrentDirectory()}\Models\Data\cube.obj";
-            cubePath = @"C:\Users\d3nis\OneDrive\Рабочий стол\1.obj";
             Model3D cube = Model3D.ParseOBJ(cubePath, imgPath, colorShader, texShader, new Vector4(0, 1, 0, 1));
             cube.RotationPerSecond = new RotationAngles(MathHelper.PiOver3, MathHelper.PiOver2, MathHelper.Pi);
             _models.Add(cube);
@@ -110,6 +111,8 @@ namespace OpenGL.Windows
         protected override void OnResize(ResizeEventArgs e)
         {
             base.OnResize(e);
+            GL.Viewport(0, 0, Size.X, Size.Y);
+            camera.AspectRatio = Size.X / (float)Size.Y;
         }
     }
 }

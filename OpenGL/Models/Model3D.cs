@@ -4,6 +4,8 @@ using OpenGL.Objects;
 using OpenGL.Shaders;
 using System.Drawing;
 using OpenTK.Graphics.OpenGL;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace OpenGL.Models
 {
@@ -295,21 +297,18 @@ namespace OpenGL.Models
         {
             //-----------------------
             // To do:
-            // 1) Parse textures
-            // 2) Parse normals
+            // 1) Parse normals
             //-----------------------
 
             List<float> vertices = new List<float>();
             List<uint> indices = new List<uint>();
-            
-            StreamReader? reader = null;
-            try
+
+            using (var reader = new StreamReader(objPath))
             {
-                reader = new StreamReader(objPath);
                 string? line = reader.ReadLine();
                 while (line != null)
                 {
-                    line = line.Replace('.', ',');
+                    line = line.Replace('.', ',').Trim();
                     if (line.StartsWith("v "))
                     {
                         string[] tokens = line.Split(' ');
@@ -324,19 +323,11 @@ namespace OpenGL.Models
                         for (int i = 1; i < tokens.Length; i++)
                         {
                             string[] parts = tokens[i].Split('/');
-                            indices.Add(Convert.ToUInt32(parts[0]) - 1);
+                            indices.Add(uint.Parse(parts[0]) - 1);
                         }
                     }
                     line = reader.ReadLine();
                 }
-            }
-            catch (Exception e)
-            {
-                throw new Exception($"An error occurred during parsing\nError: {e.Message}");
-            }
-            finally
-            {
-                reader?.Close();
             }
 
             List<float> colors = new List<float>(vertices.Count / 3 * 4);
@@ -356,65 +347,86 @@ namespace OpenGL.Models
         }
         public static Model3D ParseOBJ(string objPath, string texPath, Shader colorShader, Shader textureShader, Vector4 color)
         {
-            List<float> vertices = new List<float>();
-            List<uint> indices = new List<uint>();
-            List<float> allTexCoords = new List<float>();
-
-            float[]? texCoords = null;
-
-            StreamReader? reader = null;
-            try
+            // One .obj file may contain multiple objects with multiple textures
+            // To do:
+            //      1) Parse normals info
+            //      2) Parse multiple objects in 1 .obj file
+            //      3) Get file paths from parsing, parse .mtl file info
+            
+            List<float> v = new List<float>();
+            List<float> vt = new List<float>();
+            List<string> f = new List<string>();
+           
+            using (var reader = new StreamReader(objPath))
             {
-                reader = new StreamReader(objPath);
                 string? line = reader.ReadLine();
                 while (line != null)
                 {
-                    line = line.Replace('.', ',');
+                    line = line.Replace('.', ',').Trim();
                     if (line.StartsWith("v "))
                     {
                         string[] tokens = line.Split(' ');
 
-                        vertices.Add(float.Parse(tokens[1]));
-                        vertices.Add(float.Parse(tokens[2]));
-                        vertices.Add(float.Parse(tokens[3]));
+                        v.Add(float.Parse(tokens[1]));
+                        v.Add(float.Parse(tokens[2]));
+                        v.Add(float.Parse(tokens[3]));
                     }
                     else if (line.StartsWith("vt "))
                     {
                         string[] tokens = line.Split(' ');
-                        allTexCoords.Add(float.Parse(tokens[1]));
-                        allTexCoords.Add(float.Parse(tokens[2]));
+                        vt.Add(float.Parse(tokens[1]));
+                        vt.Add(float.Parse(tokens[2]));
                     }
                     else if (line.StartsWith("f "))
                     {
-                        if (texCoords == null)
-                        {
-                            texCoords = new float[vertices.Count / 3 * 2];
-                        }
                         string[] tokens = line.Split(' ');
-                        for (int i = 1; i < tokens.Length; i++)
-                        {
-                            string[] parts = tokens[i].Split('/');
-
-                            uint index = uint.Parse(parts[0]) - 1;
-                            indices.Add(index);
-
-                            int texIndex = int.Parse(parts[1]) - 1;
-                            texCoords[index * 2] = allTexCoords[texIndex * 2];
-                            texCoords[index * 2 + 1] = allTexCoords[texIndex * 2 + 1];
-                        }
+                        f.Add(tokens[1]);
+                        f.Add(tokens[2]);
+                        f.Add(tokens[3]);
                     }
                     line = reader.ReadLine();
                 }
             }
-            catch (Exception e)
+
+            List<float> vertices = new List<float>(v);
+            List<float?> textureVertices = new List<float?>(new float?[vertices.Count / 3 * 2]);
+            List<uint> indices = new List<uint>();
+
+            foreach (var vertexInfo in f)
             {
-                throw new Exception($"An error occurred during parsing\nError: {e.Message}");
+                string[] info = vertexInfo.Split("/");
+                int vIndex = int.Parse(info[0]) - 1;
+                int vtIndex = int.Parse(info[1]) - 1;
+                int vnIndex = int.Parse(info[2]) - 1;
+
+                if (textureVertices[vIndex * 2] == null && textureVertices[vIndex * 2 + 1] == null)
+                {
+                    textureVertices[vIndex * 2] = vt[vtIndex * 2];
+                    textureVertices[vIndex * 2 + 1] = vt[vtIndex * 2 + 1];
+
+                    indices.Add((uint)vIndex);
+                }
+                else if (textureVertices[vIndex * 2] == vt[vtIndex * 2] && textureVertices[vIndex * 2 + 1] == vt[vtIndex * 2 + 1])
+                {
+                    indices.Add((uint)vIndex);
+                }
+                else
+                {
+                    vertices.Add(v[vIndex * 3]);
+                    vertices.Add(v[vIndex * 3 + 1]);
+                    vertices.Add(v[vIndex * 3 + 2]);
+
+                    indices.Add((uint)textureVertices.Count / 2);
+
+                    textureVertices.Add(vt[vtIndex * 2]);
+                    textureVertices.Add(vt[vtIndex * 2 + 1]);
+                }
             }
-            finally
-            {
-                reader?.Close();
-            }
-            List<float> colors = new List<float>(vertices.Count / 3 * 4);
+            float[] textures = new float[textureVertices.Count];
+            for (int i = 0; i < textureVertices.Count; i++)
+                textures[i] = textureVertices[i].GetValueOrDefault();
+
+            List<float> colors = new List<float>(v.Count / 3 * 4);
             for (int i = 0; i < vertices.Count / 3; i++)
             {
                 colors.Add(color.X);
@@ -423,7 +435,7 @@ namespace OpenGL.Models
                 colors.Add(color.W);
             }
             Texture texture = Texture.LoadFromFile(texPath);
-            return new Model3D(vertices.ToArray(), indices.ToArray(), colors.ToArray(), texCoords, colorShader, textureShader, texture);
+            return new Model3D(vertices.ToArray(), indices.ToArray(), colors.ToArray(), textures.ToArray(), colorShader, textureShader, texture);
         }
     }
 

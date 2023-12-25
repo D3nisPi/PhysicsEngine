@@ -20,6 +20,7 @@ namespace OpenGL.Cameras
 
         private const float DEPTHNEAR = 0.01f; // Distance to the near plane of the camera 
         private const float FOV = MathHelper.PiOver2; // Field of view
+        private const float DELTATHETA = 0.00001f;
 
 
         private float _renderDistance; // Distance to the far plane of the camera
@@ -68,7 +69,7 @@ namespace OpenGL.Cameras
             get { return _theta; }
             set
             {
-                _theta = MathHelper.Clamp(value, 0, MathHelper.PiOver2);
+                _theta = MathHelper.Clamp(value, DELTATHETA, MathHelper.Pi - DELTATHETA);         
                 UpdateVectors();
             }
         }
