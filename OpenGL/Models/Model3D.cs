@@ -352,11 +352,12 @@ namespace OpenGL.Models
             //      1) Parse normals info
             //      2) Parse multiple objects in 1 .obj file
             //      3) Get file paths from parsing, parse .mtl file info
-            
+            //      4) Add the ability to assign a color to each vertex
+
             List<float> v = new List<float>();
             List<float> vt = new List<float>();
             List<string> f = new List<string>();
-           
+
             using (var reader = new StreamReader(objPath))
             {
                 string? line = reader.ReadLine();
@@ -391,6 +392,9 @@ namespace OpenGL.Models
             List<float> vertices = new List<float>(v);
             List<float?> textureVertices = new List<float?>(new float?[vertices.Count / 3 * 2]);
             List<uint> indices = new List<uint>();
+            Dictionary<int, List<int>> aliasIndices = new Dictionary<int, List<int>>();
+            for (int i = 0; i < vertices.Count / 3; i++)
+                aliasIndices[i] = new List<int>() { i };
 
             foreach (var vertexInfo in f)
             {
@@ -406,16 +410,25 @@ namespace OpenGL.Models
 
                     indices.Add((uint)vIndex);
                 }
-                else if (textureVertices[vIndex * 2] == vt[vtIndex * 2] && textureVertices[vIndex * 2 + 1] == vt[vtIndex * 2 + 1])
-                {
-                    indices.Add((uint)vIndex);
-                }
                 else
                 {
+                    bool found = false;
+                    foreach(var aliasIndex in aliasIndices[vIndex])
+                    {
+                        if (textureVertices[aliasIndex * 2] == vt[vtIndex * 2] && textureVertices[aliasIndex * 2 + 1] == vt[vtIndex * 2 + 1])
+                        {
+                            found = true;
+                            indices.Add((uint)aliasIndex);
+                            break;
+                        }
+                    }
+                    if (found) continue;
+
                     vertices.Add(v[vIndex * 3]);
                     vertices.Add(v[vIndex * 3 + 1]);
                     vertices.Add(v[vIndex * 3 + 2]);
 
+                    aliasIndices[vIndex].Add(textureVertices.Count / 2);
                     indices.Add((uint)textureVertices.Count / 2);
 
                     textureVertices.Add(vt[vtIndex * 2]);
