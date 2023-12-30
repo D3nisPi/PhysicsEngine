@@ -414,9 +414,6 @@ namespace OpenGL.Models
         }
         public static Model ParseOBJ(string path, Shader colorShader, Vector4 color)
         {
-            Stopwatch sw = new();
-            sw.Start();
-
             (ObjData[] objData, string mtlPath) = ReadObj(path);
 
             List<ModelUnit> units = new List<ModelUnit>();
@@ -425,7 +422,6 @@ namespace OpenGL.Models
                 ModelUnit unit = CreateModelUnit(obj);
                 units.Add(unit);
             }
-            Console.WriteLine(sw.ElapsedMilliseconds);
             return new Model(units, colorShader, null, color);
         }
         public static Model ParseOBJ(string path, Shader colorShader, Shader textureShader)
@@ -437,8 +433,7 @@ namespace OpenGL.Models
             // To do:
             //      1) Parse normals info
             //      2) Parse .mtl file info
-            Stopwatch sw = new();
-            sw.Start();
+
 
             (ObjData[] objData, string mtlPath) = ReadObj(path);
 
@@ -451,7 +446,6 @@ namespace OpenGL.Models
                 ModelUnit unit = CreateModelUnit(obj, mtl);
                 units.Add(unit);
             }
-            Console.WriteLine(sw.ElapsedMilliseconds);
             return new Model(units, colorShader, textureShader, color);
         }
     }
