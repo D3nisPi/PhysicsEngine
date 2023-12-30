@@ -12,6 +12,21 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Models\Data\Aether\Aether.mtl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Models\Data\Aether\Aether.obj">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Models\Data\Aether\Aether_Tex_Body_Diffuse.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Models\Data\Aether\Aether_Tex_Face_Diffuse.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Models\Data\Aether\Aether_Tex_Hair_Diffuse.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Models\Data\cube.obj">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

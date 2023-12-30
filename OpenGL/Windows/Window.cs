@@ -10,7 +10,7 @@ namespace OpenGL.Windows
 {
     public class Window : GameWindow
     {
-        private List<Model3D> _models = new List<Model3D>();
+        private List<Model> _models = new List<Model>();
 
         private float _zoomSensitivity = 1f;
         private float _mouseSensitivity = 0.015f;
@@ -25,7 +25,7 @@ namespace OpenGL.Windows
         public Window(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings)
             : base(gameWindowSettings, nativeWindowSettings)
         {
-
+            VSync = VSyncMode.On;
         }
 
         protected override void OnLoad()
@@ -36,22 +36,24 @@ namespace OpenGL.Windows
             GL.PolygonMode(MaterialFace.Back, PolygonMode.Line);
             //CursorState = CursorState.Grabbed;
 
-            camera = new Camera(new Vector3(5, 5, 5), Vector3.Zero, Size.X / (float)Size.Y, 100, 0.3f);
+            camera = new Camera(new Vector3(10, 10, 10), Vector3.Zero, Size.X / (float)Size.Y, 100, 0.3f);
 
 
-            string vertPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\colorShader.vert";
-            string fragPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\colorShader.frag";
+            string vertPath = $@"Shaders\Data\colorShader.vert";
+            string fragPath = $@"Shaders\Data\colorShader.frag";
             colorShader = new Shader(vertPath, fragPath);
 
-            vertPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\texShader.vert";
-            fragPath = $@"{Directory.GetCurrentDirectory()}\Shaders\Data\texShader.frag";
+            vertPath = $@"Shaders\Data\texShader.vert";
+            fragPath = $@"Shaders\Data\texShader.frag";
             texShader = new Shader(vertPath, fragPath);
 
-            string imgPath = @$"{Directory.GetCurrentDirectory()}\Models\Data\wood.jpg";
-            string cubePath = @$"{Directory.GetCurrentDirectory()}\Models\Data\cube.obj";
-            Model3D cube = Model3D.ParseOBJ(cubePath, imgPath, colorShader, texShader, new Vector4(0, 1, 0, 1));
-            cube.RotationPerSecond = new RotationAngles(MathHelper.PiOver3, MathHelper.PiOver2, MathHelper.Pi);
-            _models.Add(cube);
+
+            string path = @$"Models\Data\Aether\Aether.obj";
+
+            Model model = Model.ParseOBJ(path, colorShader, texShader, new Vector4(0, 1, 0, 1));
+            //model.RotationPerSecond = new RotationAngles(MathHelper.PiOver3, MathHelper.PiOver2, MathHelper.Pi);
+            _models.Add(model);
+            model.Move(0, -10, 0);
 
             base.OnLoad();
         }
@@ -62,7 +64,7 @@ namespace OpenGL.Windows
 
             foreach (var model in _models)
             {
-                //model.Update((float)args.Time);
+                model.Update((float)args.Time);
                 model.Draw();
             }
 

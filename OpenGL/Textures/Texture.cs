@@ -1,5 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using StbImageSharp;
+using System.Diagnostics;
 
 namespace OpenGL.Textures
 {

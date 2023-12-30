@@ -88,5 +88,11 @@ namespace OpenGL.Shaders
             int location = GL.GetUniformLocation(_program, name);
             GL.Uniform1(location, data);
         }
+        public void SetVec4Uniform(string name, ref Vector4 data)
+        {
+            GL.UseProgram(_program);
+            int location = GL.GetUniformLocation(_program, name);
+            GL.Uniform4(location, ref data);
+        }
     }
 }

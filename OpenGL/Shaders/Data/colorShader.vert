@@ -1,7 +1,7 @@
 ﻿#version 330
 
 layout (location = 0) in vec3 aPosition; // Vertex coordinates
-layout (location = 1) in vec4 aColor; // Vertex color
+uniform vec4 aColor; // Vertex color
 
 out vec4 vColor;
 
